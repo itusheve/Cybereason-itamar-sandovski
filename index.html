@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <title>Main Application</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+        .container{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            height: 100%;
+        }
+        .section { 
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        #grid-section{
+            grid-column: 1/2;
+            grid-row: 1/2;
+        }
+        #text-section{
+            grid-column: 2/3;
+            grid-row: 1/2;
+        }
+        #image-section{
+            grid-column: 2/3;
+            grid-row: 2/3;
+        }
+        #list-section{
+            grid-column: 1/2;
+            grid-row: 2/3;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="section" id="grid-section"><div id="app1"></div></div>
+    <div class="section" id="text-section"><div id="app2"></div></div>
+    <div class="section" id="list-section"><div id="app4"></div></div>
+    <div class="section" id="image-section"><div id="app3"></div></div>
+</div>
+    <script>
+        const config = [
+            { id: "grid", version:'1.0.0', url_js: "http://localhost:5001/assets/index.js",url_css:"http://localhost:5001/assets/index.css" },
+            { id: "text", version:'1.0.0', url_js: "http://localhost:5002/assets/index.js",url_css:"http://localhost:5002/assets/index.css" },
+            { id: "image", version:'1.0.0', url_js: "http://localhost:5003/assets/index.js",url_css:"http://localhost:5003/assets/index.css" },
+            { id: "list", version:'1.0.0', url_js: "http://localhost:5004/assets/index.js",url_css:"http://localhost:5004/assets/index.css"}
+        ];
+
+        function patchVersion(bundleUrl,version){
+            if(!version){
+                version='1.0.0';
+            }
+            bundleUrl = bundleUrl.replace('index',`index-${version}`);
+            return bundleUrl;
+        }
+        function loadScript(url,version) {
+            return new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = patchVersion(url,version);
+            script.onload = resolve;
+            document.body.appendChild(script);
+            });
+        }
+        function loadCSS(url,version) {
+            return new Promise((resolve, reject) => {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = patchVersion(url,version);
+                link.onload = resolve;
+                link.onerror = reject;
+                document.head.appendChild(link);
+            });
+        }
+
+
+        function loadSubApplications() {
+            config.forEach(subApp => {
+                const section = document.getElementById(`${subApp.id}-section`);
+                loadCSS(subApp.url_css,subApp.version).then(()=>{
+                    loadScript(subApp.url_js,subApp.version).then(()=>{
+                }).catch((err)=>console.error(`error while loading app:${subApp.id} js file ${err}`));
+                }).catch((err)=>console.error(`css error for app:${subApp.id}`))
+                
+            });
+        }
+
+        sessionStorage.setItem('app3-list-items',JSON.stringify(['Item 1','Item 2','Item 3','Item 4','Item 5']));
+       
+        window.onload = loadSubApplications;
+    </script>
+</body>
+</html>
